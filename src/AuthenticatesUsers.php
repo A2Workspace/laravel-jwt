@@ -38,7 +38,7 @@ trait AuthenticatesUsers
     }
 
     /**
-     * 回傳驗證守衛。
+     * 回傳認證守衛
      *
      * @return \Tymon\JWTAuth\JWTGuard
      */

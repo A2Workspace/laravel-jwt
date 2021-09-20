@@ -1,6 +1,7 @@
 {
     "name": "a2workspace/laravel-jwt",
     "description": "提供 Laravel JWT 認證功能",
+    "type": "project",
     "license": "MIT",
     "authors": [
         {
