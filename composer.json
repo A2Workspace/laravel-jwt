@@ -1,0 +1,35 @@
+{
+    "name": "a2workspace/laravel-jwt",
+    "description": "提供 Laravel JWT 認證功能",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Shishamou",
+            "email": "shishatw225@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^7.4|^8.0",
+        "tymon/jwt-auth": "^1.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "4.x"
+    },
+    "autoload": {
+        "psr-4": {
+            "A2Workspace\\LaravelJwt\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "A2Workspace\\LaravelJwt\\ServiceProvider"
+            ]
+        }
+    }
+}
