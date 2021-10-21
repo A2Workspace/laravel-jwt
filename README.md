@@ -11,7 +11,7 @@
 此套件尚未發布到 **Packagist** 需透過下列方法安裝：
 
 ```
-composer config repositories.hooks vcs https://github.com/A2Workspace/laravel-jwt.git
+composer config repositories.a2workspace/laravel-jwt vcs https://github.com/A2Workspace/laravel-jwt.git
 composer require "a2workspace/laravel-jwt:*"
 ```
 
