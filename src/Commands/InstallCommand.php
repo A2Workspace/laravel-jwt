@@ -28,7 +28,7 @@ class InstallCommand extends Command
         $this->line('安裝 jwt-auth ...');
 
         $this->call('vendor:publish', [
-            '--provider' => 'Tymon\JWTAuth\Providers\LaravelServiceProvider',
+            '--provider' => 'PHPOpenSourceSaver\JWTAuth\Providers\LaravelServiceProvider',
         ]);
 
         $this->call('jwt:secret');

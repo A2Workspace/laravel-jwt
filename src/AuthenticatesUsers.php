@@ -2,10 +2,10 @@
 
 namespace A2Workspace\LaravelJwt;
 
-use Tymon\JWTAuth\JWTGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Tymon\JWTAuth\Exceptions\JWTException;
+use PHPOpenSourceSaver\JWTAuth\JWTGuard;
+use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
 
 trait AuthenticatesUsers
 {
@@ -40,7 +40,7 @@ trait AuthenticatesUsers
     /**
      * 回傳認證守衛
      *
-     * @return \Tymon\JWTAuth\JWTGuard
+     * @return \PHPOpenSourceSaver\JWTAuth\JWTGuard
      */
     protected function guard(): JWTGuard
     {

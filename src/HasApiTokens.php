@@ -2,7 +2,7 @@
 
 namespace A2Workspace\LaravelJwt;
 
-use Tymon\JWTAuth\Facades\JWTAuth;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 trait HasApiTokens
 {

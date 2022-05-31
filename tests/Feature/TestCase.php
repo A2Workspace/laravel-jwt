@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use A2Workspace\LaravelJwt\LaravelJwt;
 use Illuminate\Contracts\Config\Repository;
 use Orchestra\Testbench\TestCase as BaseTestCase;
-use Tymon\JWTAuth\Providers\LaravelServiceProvider;
+use PHPOpenSourceSaver\JWTAuth\Providers\LaravelServiceProvider;
 
 abstract class TestCase extends BaseTestCase
 {
