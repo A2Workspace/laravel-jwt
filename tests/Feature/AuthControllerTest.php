@@ -176,7 +176,7 @@ class AuthControllerTest extends TestCase
 }
 
 class User extends \Illuminate\Foundation\Auth\User
-    implements \Tymon\JWTAuth\Contracts\JWTSubject
+    implements \PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject
 {
     use HasApiTokens;
 }
