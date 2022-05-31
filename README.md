@@ -32,7 +32,7 @@ php artisan laravel-jwt:install
 
 ### 修改 User 資料模型
 
-首先讓你的 `User` 模型實作 `Tymon\JWTAuth\Contracts\JWTSubject` 介面；
+首先讓你的 `User` 模型實作 `A2Workspace\LaravelJwt\Contracts\JWTSubject` 介面；
 並將 `A2Workspace\LaravelJwt\HasApiTokens` 特性加到你的 `User` 模型中；
 
 ```php
@@ -44,14 +44,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use A2Workspace\LaravelJwt\HasApiTokens;
-use Tymon\JWTAuth\Contracts\JWTSubject;
+use A2Workspace\LaravelJwt\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
     use HasApiTokens, HasFactory, Notifiable;
 }
 ```
-有關 `Tymon\JWTAuth\Contracts\JWTSubject` 設定可參考 [https://jwt-auth.readthedocs.io/en/develop/quick-start/#update-your-user-model](https://jwt-auth.readthedocs.io/en/develop/quick-start/#update-your-user-model)
+Interface `A2Workspace\LaravelJwt\Contracts\JWTSubject` 繼承自 `PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject` 設定可參考 [Update your User model - Laravel JWT Auth](https://laravel-jwt-auth.readthedocs.io/en/latest/quick-start/#update-your-user-model)
 
 
 ### 設定登入認證守衛 (Auth Guard)
@@ -148,7 +148,7 @@ class AuthController extends Controller
 需對應 `configs/auth.php` 中的 `guards` 名稱，且 `driver` 必須為 `jwt`。
 
 ```php
-use Tymon\JWTAuth\JWTGuard;
+use PHPOpenSourceSaver\JWTAuth\JWTGuard;
 
 class AuthController extends Controller
 {
@@ -157,7 +157,7 @@ class AuthController extends Controller
     /**
      * 回傳認證守衛
      *
-     * @return \Tymon\JWTAuth\JWTGuard
+     * @return \PHPOpenSourceSaver\JWTAuth\JWTGuard
      */
     protected function guard(): JWTGuard
     {
