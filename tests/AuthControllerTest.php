@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests;
 
 use A2Workspace\LaravelJwt\HasApiTokens;
 use Illuminate\Contracts\Hashing\Hasher;
@@ -37,7 +37,7 @@ class AuthControllerTest extends TestCase
     public function test_login()
     {
         $user = new User();
-        $user->username = 'bk201';
+        $user->username = 'foobar';
         $user->password = $this->app->make(Hasher::class)->make('foobar123');
         $user->save();
 

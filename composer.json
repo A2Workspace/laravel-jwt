@@ -1,7 +1,6 @@
 {
     "name": "a2workspace/laravel-jwt",
-    "description": "提供 Laravel JWT 認證功能",
-    "type": "project",
+    "description": "一個幾乎零配置的 API 認證服務",
     "license": "MIT",
     "authors": [
         {
@@ -14,7 +13,7 @@
         "php-open-source-saver/jwt-auth": "^1.4"
     },
     "require-dev": {
-        "orchestra/testbench": "4.x"
+        "orchestra/testbench": "6.x"
     },
     "autoload": {
         "psr-4": {
@@ -32,5 +31,13 @@
                 "A2Workspace\\LaravelJwt\\ServiceProvider"
             ]
         }
+    },
+    "scripts": {
+        "test": [
+            "vendor/bin/phpunit"
+        ],
+        "test-coverage": [
+            "vendor/bin/phpunit --coverage-html coverage"
+        ]
     }
 }
