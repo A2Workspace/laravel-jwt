@@ -1,29 +1,31 @@
 # A2Workspace/Laravel-JWT
 
-一個隨開即用的 API 認證服務。
+一個幾乎零配置的 API 認證服務。
 
-此套件是基於 [tymon/jwt-auth](https://github.com/tymondesigns/jwt-auth) 的包裝，並提供一個簡易的 `AuthenticatesUsers` 特性方便擴充。
+此套件是基於 [php-open-source-saver/jwt-auth](https://github.com/PHP-Open-Source-Saver/jwt-auth/) 的包裝，並提供一個簡易的 `AuthenticatesUsers` 特性方便擴充。
 
-此套件相容於 **Nuxt** 的 `auth-nuxt` 模組。如何設定請參考 [# Nuxt 登入](#Nuxt-登入)
+特性:
+- 支援多使用者模型
+- 相容 **Nuxt.js** 的 `auth-nuxt`。如何設定請參考 [# Nuxt 登入](#Nuxt-登入)
 
 
 ## 安裝
-此套件尚未發布到 **Packagist** 需透過下列方法安裝：
+執行下列命令透過 **composer** 引入到你的 **Laravel** 專案:
 
-```
-composer config repositories.a2workspace/laravel-jwt vcs https://github.com/A2Workspace/laravel-jwt.git
-composer require "a2workspace/laravel-jwt:*"
+```bash
+composer require a2workspace/laravel-jwt
 ```
 
-接著，你應該執行 `laravel-jwt:install` Artisan 指令來進行安裝。
-該指令會生成設定檔與 JWT 密鑰。
+接著，執行 `laravel-jwt:install` Artisan 指令來進行安裝。
+該指令會生成設定檔，並注入 `JWT_SECRET` 到 `.env` 中。
 
-```
+```bash
 php artisan laravel-jwt:install
 ```
 
 現在應該會有個 `config/jwt.php` 檔案。
 
+-----
 
 ## 快速開始
 
@@ -125,13 +127,61 @@ Route::middleware('auth:api')->get('/auth/user', function (Request $request) {
 
 ```
 
-## 自訂認證控制器
+-----
+
+## 客製化認證控制器
+
+這裡告訴你如何編寫自己的認證控制器，你可以參考 [A2Workspace/laravel-social-entry-demo](https://github.com/A2Workspace/laravel-social-entry-demo/blob/master/app/Http/Controllers) 中如何配置多使用者模型認證。
+
+一個簡易範例:
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use App\Http\Resources\AdminResource;
+use A2Workspace\LaravelJwt\AuthenticatesUsers;
+
+class AuthController extends Controller
+{
+    use AuthenticatesUsers;
+
+    /**
+     * 回傳認證守衛
+     *
+     * @return \PHPOpenSourceSaver\JWTAuth\JWTGuard
+     */
+    protected function guard(): JWTGuard
+    {
+        return Auth::guard('admin');
+    }
+
+    /**
+     * 取得驗證使用者名稱的欄位
+     *
+     * @return string
+     */
+    protected function username()
+    {
+        return 'account';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function me(Request $request)
+    {
+        return new AdminResource($request->user());
+    }
+}
+```
+
+### 引入認證特性到控制器中
 
 `A2Workspace\LaravelJwt\AuthenticatesUsers` 提供了 JWT 登入認證所需的所有方法，僅需要在控制器中使用該特性，並註冊到專案的路由檔案。
 
 ```php
-<?php
-
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
@@ -198,6 +248,8 @@ Route::get('/auth/user', 'AuthController@me');
 ```
 
 *注意: 當使用自訂控制器時，就不需要在 `App\Providers\AuthServiceProvider` 中重複註冊 `LaravelJwt:routes` 了。*
+
+-----
 
 ## Nuxt 登入
 
