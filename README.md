@@ -1,12 +1,34 @@
-# A2Workspace/Laravel-JWT
+<h1 align="center">Laravel-JWT</h1>
+<p align="center">
+<a href="https://github.com/A2Workspace/laravel-jwt">
+    <img alt="" src="https://github.com/A2Workspace/laravel-jwt/actions/workflows/coverage.yml/badge.svg">
+</a>
+<a href="https://github.com/A2Workspace/laravel-jwt">
+    <img alt="" src="https://img.shields.io/github/workflow/status/A2Workspace/laravel-jwt/tests?style=flat-square">
+</a>
+<a href="https://codecov.io/gh/A2Workspace/laravel-jwt">
+    <img alt="" src="https://img.shields.io/codecov/c/github/A2Workspace/laravel-jwt.svg?style=flat-square">
+</a>
+<a href="https://github.com/A2Workspace/laravel-jwt/blob/master/LICENSE">
+    <img alt="" src="https://img.shields.io/github/license/A2Workspace/laravel-jwt?style=flat-square">
+</a>
+<a href="https://packagist.org/packages/a2workspace/laravel-jwt">
+    <img alt="" src="https://img.shields.io/packagist/v/a2workspace/laravel-jwt.svg?style=flat-square">
+</a>
+<a href="https://packagist.org/packages/a2workspace/laravel-jwt">
+    <img alt="" src="https://img.shields.io/packagist/dt/a2workspace/laravel-jwt.svg?style=flat-square">
+</a>
+</p>
 
-一個幾乎零配置的 API 認證服務。
+<p>一個幾乎零配置，隨開即用的 API 認證服務。</p>
 
-此套件是基於 [php-open-source-saver/jwt-auth](https://github.com/PHP-Open-Source-Saver/jwt-auth/) 的包裝，並提供一個簡易的 `AuthenticatesUsers` 特性方便擴充。
+<br>
+
+此套件是基於 [php-open-source-saver/jwt-auth](https://github.com/PHP-Open-Source-Saver/jwt-auth/) 的包裝，並提供一個簡易的 [AuthenticatesUsers](https://github.com/A2Workspace/laravel-jwt/blob/master/src/AuthenticatesUsers.php) 特性方便擴充。
 
 特性:
 - 支援多使用者模型
-- 相容 **Nuxt.js** 的 `auth-nuxt`。如何設定請參考 [# Nuxt 登入](#Nuxt-登入)
+- 相容 **Nuxt.js** 的 `auth-nuxt`。如何設定請參考 [# Nuxt Supprt](#Nuxt-Supprt)
 
 
 ## 安裝
@@ -251,7 +273,7 @@ Route::get('/auth/user', 'AuthController@me');
 
 -----
 
-## Nuxt 登入
+## Nuxt Support
 
 此套件相容於 **Nuxt** 的 `auth-nuxt` 模組中的 `Laravel JWT` ([參考這裡](https://auth.nuxtjs.org/providers/laravel-jwt))。
 
