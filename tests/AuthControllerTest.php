@@ -193,6 +193,8 @@ class AuthControllerTest extends TestCase
 
     final public function test_refresh_with_expired_token()
     {
+        Carbon::setTestNow(now()->addHours(rand(500, 50000)));
+
         $this->createUser('new_user', 'pw123456');
 
         $loginResponse = $this->post(
@@ -204,22 +206,23 @@ class AuthControllerTest extends TestCase
         );
 
         $loginResponse->assertOk();
-
         $this->resetAuth();
-        $this->assertGuest('api');
 
-        Carbon::setTestNow(now()->addHours(1));
+        Carbon::setTestNow(now()->addHours(2));
 
         $accessToken = $loginResponse->decodeResponseJson()['access_token'];
+
+        $this->getJson('/api/auth/user', [
+            'Authorization' => "Bearer {$accessToken}",
+        ])->assertStatus(401);
 
         $refreshResponse = $this->postJson('/api/auth/refresh', [], [
             'Authorization' => "Bearer {$accessToken}",
         ]);
 
         $refreshResponse->assertOk();
-
         $this->resetAuth();
-        // $this->assertGuest('api');
+        // $this->assertGuest('api'); // Dont call assertGuest() after resetAuth(), it will fail.
 
         $decodedResponse = $refreshResponse->decodeResponseJson();
 
@@ -228,6 +231,13 @@ class AuthControllerTest extends TestCase
         $this->assertArrayHasKey('access_token', $decodedResponse);
 
         $refreshedAccessToken = $decodedResponse['access_token'];
+
+        if (1) {
+            var_dump([
+                'access_token' => Helper::getTokenInfo($accessToken),
+                'refreshed_access_token' => Helper::getTokenInfo($refreshedAccessToken),
+            ]);
+        }
 
         $resourceResponse = $this->getJson('/api/auth/user', [
             'Authorization' => "Bearer {$refreshedAccessToken}",

@@ -93,11 +93,25 @@ trait AuthenticatesUsers
      */
     public function refresh()
     {
-        // return $this->respondWithToken($this->guard()->refresh(true));
+        try {
+            $newToken = $this->guard()->refresh();
+            return $this->respondWithToken($newToken);
+        } catch (JWTException $e) {
+            return $this->respondWithInvalidAccess();
+        }
+    }
+
+    /**
+     * Handle reissue token request.
+     *
+     *@return \Illuminate\Http\JsonResponse
+     */
+    protected function reissue()
+    {
         $jwtGuard = $this->guard();
 
         try {
-            $temporaryToken = $jwtGuard->refresh(true);
+            $temporaryToken = $jwtGuard->refresh();
 
             $jwtGuard->setToken($temporaryToken);
             $payload = $jwtGuard->getPayload();
@@ -127,7 +141,6 @@ trait AuthenticatesUsers
      */
     public function me(Request $request)
     {
-        var_dump($this->guard()->check());
         if ($this->guard()->check()) {
             return response()->json($this->guard()->user());
         }

@@ -59,4 +59,9 @@ final class Helper
     {
         return static::guard()->blacklist();
     }
+
+    public static function user()
+    {
+        return static::guard()->user();
+    }
 }
