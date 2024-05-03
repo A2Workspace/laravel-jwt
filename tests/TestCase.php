@@ -31,12 +31,11 @@ abstract class TestCase extends BaseTestCase
         $config = $app->make(Repository::class);
 
         $config->set('auth.defaults.provider', 'users');
-
-        if (($userClass = $this->getUserClass()) !== null) {
-            $config->set('auth.providers.users.model', $userClass);
-        }
-
+        $config->set('auth.providers.users.model', $this->getUserClass());
         $config->set('auth.guards.api', ['driver' => 'jwt', 'provider' => 'users']);
+
+        $config->set('jwt.ttl', 60); // 1 hour
+        $config->set('jwt.refresh_ttl', 24 * 60); // 1 day
     }
 
     /**
@@ -46,5 +45,6 @@ abstract class TestCase extends BaseTestCase
      */
     protected function getUserClass()
     {
+        throw new \RuntimeException('User class not defined.');
     }
 }

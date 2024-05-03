@@ -10,7 +10,7 @@ use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
 trait AuthenticatesUsers
 {
     /**
-     * 處理登入請求
+     * Handle login request.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -27,7 +27,7 @@ trait AuthenticatesUsers
     }
 
     /**
-     * 自 Request 取得驗證所需的欄位
+     * Get the needed authorization credentials from the request.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return array
@@ -38,7 +38,7 @@ trait AuthenticatesUsers
     }
 
     /**
-     * 回傳認證守衛
+     * Get the guard to be used during authentication.
      *
      * @return \PHPOpenSourceSaver\JWTAuth\JWTGuard
      */
@@ -48,7 +48,8 @@ trait AuthenticatesUsers
     }
 
     /**
-     * 取得驗證使用者名稱的欄位
+     * Get the login username to be used by the controller.
+     *
      *
      * @return string
      */
@@ -60,8 +61,7 @@ trait AuthenticatesUsers
     /**
      * Get the token array structure.
      *
-     * @param  string $token
-     *
+     * @param  string  $token
      * @return \Illuminate\Http\JsonResponse
      */
     protected function respondWithToken($token)
@@ -74,9 +74,9 @@ trait AuthenticatesUsers
     }
 
     /**
-     * 處理登出請求
+     * Handle logout request.
      *
-     * @param \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function logout(Request $request)
@@ -87,31 +87,51 @@ trait AuthenticatesUsers
     }
 
     /**
-     * 刷新 token
+     * Handle refresh token request.
      *
      * @return \Illuminate\Http\JsonResponse
      */
     public function refresh()
     {
+        // return $this->respondWithToken($this->guard()->refresh(true));
+        $jwtGuard = $this->guard();
+
         try {
-            return $this->respondWithToken($this->guard()->refresh());
+            $temporaryToken = $jwtGuard->refresh(true);
+
+            $jwtGuard->setToken($temporaryToken);
+            $payload = $jwtGuard->getPayload();
+
+            $newToken = $jwtGuard->tokenById($payload['sub']);
+
+            return $this->respondWithToken($newToken);
         } catch (JWTException $e) {
-            return response()->json(['error' => 'Invalid Access Token'], 401);
+            return $this->respondWithInvalidAccess();
         }
     }
 
     /**
-     * 回傳當前使用者資訊
+     * @param  string|null  $message
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function respondWithInvalidAccess(string $message = 'Invalid Access Token')
+    {
+        return response()->json(['error' => $message], 401);
+    }
+
+    /**
+     * Handle get user info request.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response 回傳使用者資訊
+     * @return \Illuminate\Http\Response
      */
     public function me(Request $request)
     {
+        var_dump($this->guard()->check());
         if ($this->guard()->check()) {
             return response()->json($this->guard()->user());
-        } else {
-            return response()->json(['error' => 'Invalid Access Token'], 401);
         }
+
+        return $this->respondWithInvalidAccess();
     }
 }
