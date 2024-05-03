@@ -3,6 +3,7 @@
 namespace Tests;
 
 use A2Workspace\LaravelJwt\HasApiTokens;
+use Carbon\Carbon;
 use Illuminate\Contracts\Hashing\Hasher;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
@@ -29,154 +30,229 @@ class AuthControllerTest extends TestCase
         parent::tearDown();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     protected function getUserClass()
     {
         return User::class;
     }
 
-    public function test_login()
+    private function createUser($username, $password): User
     {
-        $user = new User();
-        $user->username = 'foobar';
-        $user->password = $this->app->make(Hasher::class)->make('foobar123');
+        $user = new User;
+        $user->username = $username;
+        $user->password = $this->app->make(Hasher::class)->make($password);
         $user->save();
 
-        // =====================================================================
-        // = 步驟1: 登入
-        // =====================================================================
+        return $user;
+    }
 
-        $response = $this->post(
+    private function resetAuth()
+    {
+        app('auth')->forgetGuards();
+        app()->instance('tymon.jwt', null);
+    }
+
+    // =========================================================================
+    // = Specs
+    // =========================================================================
+
+    final public function test_login()
+    {
+        $this->createUser('new_user', 'pw123456');
+
+        $loginResponse = $this->post(
             '/api/auth/login',
             [
-                'username' => $user->username,
-                'password' => 'foobar123',
+                'username' => 'new_user',
+                'password' => 'pw123456',
             ]
         );
 
-        $response->assertOk();
+        $loginResponse->assertOk();
 
-        $decodedResponse = $response->decodeResponseJson();
+        $decodedResponse = $loginResponse->decodeResponseJson();
 
         $this->assertArrayHasKey('token_type', $decodedResponse);
         $this->assertArrayHasKey('expires_in', $decodedResponse);
         $this->assertArrayHasKey('access_token', $decodedResponse);
 
-        // =====================================================================
-        // = 步驟2: 取回使用者資料
-        // =====================================================================
+        $this->resetAuth();
+        $this->assertGuest('api');
 
-        $response2 = $this->withHeaders([
-            'Accept' => 'application/json',
-            'Authorization' => "Bearer {$decodedResponse['access_token']}",
-        ])->get('/api/auth/user');
+        $accessToken = $decodedResponse['access_token'];
+        $resourceResponse = $this->getJson('/api/auth/user', [
+            'Authorization' => "Bearer {$accessToken}",
+        ]);
 
-        $response2->assertOk();
+        $resourceResponse->assertOk();
 
-        $decodedResponse2 = $response2->decodeResponseJson();
+        $decodedResourceResponse = $resourceResponse->decodeResponseJson();
 
-        $this->assertArrayHasKey('username', $decodedResponse2);
-        $this->assertEquals($user->username, $decodedResponse2['username']);
+        $this->assertArrayHasKey('username', $decodedResourceResponse);
+        $this->assertEquals('new_user', $decodedResourceResponse['username']);
     }
 
-    public function test_invalid_login()
+    final public function test_login_with_nonexistent_user()
     {
         $response = $this->post(
             '/api/auth/login',
             [
-                'username' => 'nobody',
-                'password' => 'abc123',
+                'username' => 'NON_EXISTENT',
+                'password' => 'NON_EXISTENT',
             ]
         );
 
         $response->assertStatus(401);
     }
 
-    public function test_invalid_get_user()
+    final public function test_get_user_with_invalid_token()
     {
-        $response = $this->withHeaders([
-            'Accept' => 'application/json',
-        ])->get('/api/auth/user');
+        $response = $this->getJson('/api/auth/user');
 
         $response->assertStatus(401);
 
-        $response2 = $this->withHeaders([
-            'Accept' => 'application/json',
-            'Authorization' => "Bearer INVALID_ACCESS_TOKEN",
-        ])->get('/api/auth/user');
+        $response2 = $this->getJson('/api/auth/user', [
+            'Authorization' => "Bearer INVALID_ACCESS_TOKEN"
+        ]);
 
         $response2->assertStatus(401);
     }
 
-    public function test_refresh()
+    final public function test_access_token_expired()
     {
-        $user = new User();
-        $user->username = 'bk201';
-        $user->password = $this->app->make(Hasher::class)->make('foobar123');
-        $user->save();
+        $this->createUser('new_user', 'pw123456');
 
-        // =====================================================================
-        // = 步驟1: 登入
-        // =====================================================================
+        $loginResponse = $this->post(
+            '/api/auth/login',
+            [
+                'username' => 'new_user',
+                'password' => 'pw123456',
+            ]
+        );
+
+        $loginResponse->assertOk();
+
+        $this->resetAuth();
+        $this->assertGuest('api');
+
+        Carbon::setTestNow(now()->addHours(1));
+
+        $accessToken = $loginResponse->decodeResponseJson()['access_token'];
+
+        $response = $this->getJson('/api/auth/user', [
+            'Authorization' => "Bearer {$accessToken}",
+        ]);
+
+        $response->assertStatus(401);
+    }
+
+    final public function test_refresh()
+    {
+        $this->createUser('new_user', 'pw123456');
 
         $response = $this->post(
             '/api/auth/login',
             [
-                'username' => $user->username,
-                'password' => 'foobar123',
+                'username' => 'new_user',
+                'password' => 'pw123456',
             ]
         );
 
-        $response->assertOk();
+        $accessToken = $response->decodeResponseJson()['access_token'];
 
-        $decodedResponse = $response->decodeResponseJson();
+        $refreshResponse = $this->post('/api/auth/refresh', [], [
+            'Authorization' => "Bearer {$accessToken}",
+        ]);
 
-        // =====================================================================
-        // = 步驟2: 刷新 token
-        // =====================================================================
+        $decodedRefreshResponse = $refreshResponse->decodeResponseJson();
 
-        $response2 = $this->withHeaders([
-            'Accept' => 'application/json',
-            'Authorization' => "Bearer {$decodedResponse['access_token']}",
-        ])->post('/api/auth/refresh');
+        $this->assertArrayHasKey('token_type', $decodedRefreshResponse);
+        $this->assertArrayHasKey('expires_in', $decodedRefreshResponse);
+        $this->assertArrayHasKey('access_token', $decodedRefreshResponse);
 
-        $response2->assertOk();
+        $resourceResponse = $this->getJson('/api/auth/user', [
+            'Authorization' => "Bearer {$decodedRefreshResponse['access_token']}",
+        ]);
 
-        $decodedResponse2 = $response2->decodeResponseJson();
+        $resourceResponse->assertOk();
 
-        $this->assertArrayHasKey('token_type', $decodedResponse2);
-        $this->assertArrayHasKey('expires_in', $decodedResponse2);
-        $this->assertArrayHasKey('access_token', $decodedResponse2);
-
-        // =====================================================================
-        // = 步驟3: 透過刷新的 token 取回使用者資料
-        // =====================================================================
-
-        $response3 = $this->withHeaders([
-            'Accept' => 'application/json',
-            'Authorization' => "Bearer {$decodedResponse2['access_token']}",
-        ])->get('/api/auth/user');
-
-        $response3->assertOk();
-
-        $decodedResponse3 = $response3->decodeResponseJson();
-
-        $this->assertArrayHasKey('username', $decodedResponse3);
-        $this->assertEquals($user->username, $decodedResponse3['username']);
+        $decodedResourceResponse = $resourceResponse->decodeResponseJson();
+        $this->assertEquals('new_user', $decodedResourceResponse['username']);
     }
 
-    public function test_invalid_refresh()
+    final public function test_invalid_refresh()
     {
-        $response = $this->withHeaders([
-            'Accept' => 'application/json',
+        $response = $this->post('/api/auth/refresh', [], [
             'Authorization' => "Bearer INVALID_ACCESS_TOKEN",
-        ])->post('/api/auth/refresh');
+        ]);
 
         $response->assertStatus(401);
+    }
+
+    final public function test_refresh_with_expired_token()
+    {
+        Carbon::setTestNow(now()->addHours(rand(500, 50000)));
+
+        $this->createUser('new_user', 'pw123456');
+
+        $loginResponse = $this->post(
+            '/api/auth/login',
+            [
+                'username' => 'new_user',
+                'password' => 'pw123456',
+            ]
+        );
+
+        $loginResponse->assertOk();
+        $this->resetAuth();
+
+        Carbon::setTestNow(now()->addHours(2));
+
+        $accessToken = $loginResponse->decodeResponseJson()['access_token'];
+
+        $this->getJson('/api/auth/user', [
+            'Authorization' => "Bearer {$accessToken}",
+        ])->assertStatus(401);
+
+        $refreshResponse = $this->postJson('/api/auth/refresh', [], [
+            'Authorization' => "Bearer {$accessToken}",
+        ]);
+
+        $refreshResponse->assertOk();
+        $this->resetAuth();
+        // $this->assertGuest('api'); // Dont call assertGuest() after resetAuth(), it will fail.
+
+        $decodedResponse = $refreshResponse->decodeResponseJson();
+
+        $this->assertArrayHasKey('token_type', $decodedResponse);
+        $this->assertArrayHasKey('expires_in', $decodedResponse);
+        $this->assertArrayHasKey('access_token', $decodedResponse);
+
+        $refreshedAccessToken = $decodedResponse['access_token'];
+
+        if (1) {
+            var_dump([
+                'access_token' => Helper::getTokenInfo($accessToken),
+                'refreshed_access_token' => Helper::getTokenInfo($refreshedAccessToken),
+            ]);
+        }
+
+        $resourceResponse = $this->getJson('/api/auth/user', [
+            'Authorization' => "Bearer {$refreshedAccessToken}",
+        ]);
+
+        $resourceResponse->assertOk();
+
+        $decodedResourceResponse = $resourceResponse->decodeResponseJson();
+        $this->assertArrayHasKey('username', $decodedResourceResponse);
+        $this->assertEquals('new_user', $decodedResourceResponse['username']);
     }
 }
 
 class User extends \Illuminate\Foundation\Auth\User
-    implements \PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject
+implements \PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject
 {
     use HasApiTokens;
 }
